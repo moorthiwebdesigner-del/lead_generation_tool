@@ -2,7 +2,7 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import api from "../api/api";
 
-function LeadTable({ leads }) {
+function LeadTable({ leads, savedLeads, refreshSaved }) {
 
   const saveLead = async (lead) => {
     try {
@@ -15,9 +15,10 @@ function LeadTable({ leads }) {
       });
 
       alert("✅ Lead Saved Successfully");
+      refreshSaved();
     } catch (err) {
       console.error(err);
-      alert("❌ Failed to Save Lead");
+      alert(err.response?.data?.message || "Failed to Save Lead");
     }
   };
 
@@ -55,14 +56,28 @@ function LeadTable({ leads }) {
     <span>{row.formattedAddress}</span>
   );
 
-  const actionBody = (row) => (
+ const actionBody = (row) => {
+
+  const saved = savedLeads?.some(
+    (item) =>
+      item.phone === row.nationalPhoneNumber
+  );
+
+
+  return (
     <button
+      disabled={saved}
       onClick={() => saveLead(row)}
-      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+      className={
+        saved
+          ? "bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed"
+          : "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+      }
     >
-      💾 Save
+      {saved ? "✅ Saved" : "💾 Save"}
     </button>
   );
+};
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-4">

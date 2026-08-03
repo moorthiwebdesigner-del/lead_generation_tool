@@ -114,6 +114,7 @@ app.get("/api/search", async (req, res) => {
 
 
 app.post("/api/save-lead", (req, res) => {
+
   const {
     business_name,
     phone,
@@ -122,28 +123,76 @@ app.post("/api/save-lead", (req, res) => {
     address,
   } = req.body;
 
-  const sql = `
-    INSERT INTO saved_leads
-    (business_name, phone, website, rating, address)
-    VALUES (?, ?, ?, ?, ?)
-  `;
+
+  // Duplicate check
+ const checkSql = `
+  SELECT id 
+  FROM saved_leads
+  WHERE 
+    business_name = ?
+    AND phone = ?
+`;
+
 
   db.query(
-    sql,
-    [business_name, phone, website, rating, address],
+    checkSql,
+    [business_name, phone, website],
     (err, result) => {
+
       if (err) {
-        console.log(err);
         return res.status(500).json({
           message: "Database Error",
         });
       }
 
-      res.json({
-        message: "Lead Saved Successfully ✅",
-      });
+
+      if (result.length > 0) {
+
+        return res.status(400).json({
+          message: "Lead already saved",
+        });
+
+      }
+
+
+      // Insert new lead
+      const sql = `
+        INSERT INTO saved_leads
+        (business_name, phone, website, rating, address, status)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
+
+
+      db.query(
+        sql,
+        [
+          business_name,
+          phone,
+          website,
+          rating,
+          address,
+          "New"
+        ],
+        (err) => {
+
+          if (err) {
+            return res.status(500).json({
+              message:"Database Error"
+            });
+          }
+
+
+          res.json({
+            message:"Lead Saved Successfully ✅"
+          });
+
+        }
+      );
+
+
     }
   );
+
 });
 
 app.get("/api/saved-leads", (req, res) => {
@@ -216,37 +265,67 @@ app.get("/api/export-csv", (req, res) => {
 });
 
 app.get("/api/dashboard-stats", (req, res) => {
-  const stats = {};
 
-  db.query(
-    "SELECT COUNT(*) AS total FROM saved_leads",
-    (err, totalResult) => {
-      if (err) return res.status(500).json(err);
+  const sql = `
+    SELECT
+      COUNT(*) AS totalLeads,
 
-      stats.totalLeads = totalResult[0].total;
+      SUM(DATE(created_at)=CURDATE()) AS todayLeads,
 
-      db.query(
-        "SELECT COUNT(*) AS today FROM saved_leads WHERE DATE(created_at)=CURDATE()",
-        (err, todayResult) => {
-          if (err) return res.status(500).json(err);
+      AVG(rating) AS avgRating,
 
-          stats.todayLeads = todayResult[0].today;
+      SUM(status='New') AS newLeads,
 
-          db.query(
-            "SELECT AVG(rating) AS rating FROM saved_leads",
-            (err, ratingResult) => {
-              if (err) return res.status(500).json(err);
+      SUM(status='Contacted') AS contactedLeads,
 
-              stats.avgRating =
-                Number(ratingResult[0].rating || 0).toFixed(1);
+      SUM(status='Qualified') AS qualifiedLeads,
 
-              res.json(stats);
-            }
-          );
-        }
-      );
+      SUM(status='Proposal') AS proposalLeads,
+
+      SUM(status='Won') AS wonLeads,
+
+      SUM(status='Lost') AS lostLeads
+
+    FROM saved_leads
+  `;
+
+
+  db.query(sql, (err, result)=>{
+
+    if(err){
+      return res.status(500).json(err);
     }
-  );
+
+
+    const data = result[0];
+
+
+    res.json({
+
+      totalLeads: data.totalLeads || 0,
+
+      todayLeads: data.todayLeads || 0,
+
+      avgRating:
+        Number(data.avgRating || 0).toFixed(1),
+
+
+      newLeads: data.newLeads || 0,
+
+      contactedLeads: data.contactedLeads || 0,
+
+      qualifiedLeads: data.qualifiedLeads || 0,
+
+      proposalLeads: data.proposalLeads || 0,
+
+      wonLeads: data.wonLeads || 0,
+
+      lostLeads: data.lostLeads || 0,
+
+    });
+
+  });
+
 });
 
 app.get("/api/search-saved", (req, res) => {
@@ -337,6 +416,35 @@ app.get("/api/today-followups", (req, res) => {
     res.json(results);
 
   });
+
+});
+
+app.get("/api/analytics", (req,res)=>{
+
+const sql = `
+
+SELECT 
+status,
+COUNT(*) as total
+
+FROM saved_leads
+
+GROUP BY status
+
+`;
+
+db.query(sql,(err,result)=>{
+
+if(err){
+ return res.status(500).json(err);
+}
+
+
+res.json(result);
+
+
+});
+
 
 });
 

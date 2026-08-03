@@ -6,32 +6,65 @@ import {
 } from "react-icons/fa";
 
 function StatsCard({ stats }) {
-  const cards = [
-    {
-      title: "Total Saved Leads",
-      value: stats?.totalLeads || 0,
-      icon: <FaDatabase />,
-      color: "bg-blue-500",
-    },
-    {
-      title: "Today's Leads",
-      value: stats?.todayLeads || 0,
-      icon: <FaCalendarDay />,
-      color: "bg-green-500",
-    },
-    {
-      title: "Average Rating",
-      value: `⭐ ${stats?.avgRating || 0}`,
-      icon: <FaStar />,
-      color: "bg-yellow-500",
-    },
-    {
-      title: "CRM Status",
-      value: "Active",
-      icon: <FaChartLine />,
-      color: "bg-purple-500",
-    },
-  ];
+const cards = [
+
+{
+ title:"Total Saved Leads",
+ value:stats?.totalLeads || 0,
+ icon:<FaDatabase />,
+ color:"bg-blue-500"
+},
+
+{
+ title:"Today's Leads",
+ value:stats?.todayLeads || 0,
+ icon:<FaCalendarDay />,
+ color:"bg-green-500"
+},
+
+{
+ title:"New",
+ value:stats?.newLeads || 0,
+ icon:<FaChartLine />,
+ color:"bg-gray-500"
+},
+
+{
+ title:"Contacted",
+ value:stats?.contactedLeads || 0,
+ icon:<FaChartLine />,
+ color:"bg-blue-600"
+},
+
+{
+ title:"Qualified",
+ value:stats?.qualifiedLeads || 0,
+ icon:<FaChartLine />,
+ color:"bg-indigo-600"
+},
+
+{
+ title:"Proposal",
+ value:stats?.proposalLeads || 0,
+ icon:<FaChartLine />,
+ color:"bg-yellow-600"
+},
+
+{
+ title:"Won",
+ value:stats?.wonLeads || 0,
+ icon:<FaStar />,
+ color:"bg-green-600"
+},
+
+{
+ title:"Lost",
+ value:stats?.lostLeads || 0,
+ icon:<FaChartLine />,
+ color:"bg-red-600"
+}
+
+];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
