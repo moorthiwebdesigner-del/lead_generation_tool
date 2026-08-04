@@ -376,9 +376,9 @@ app.put("/api/update-lead/:id", async (req, res) => {
   }
 });
 
+
 app.get("/api/today-followups", async (req, res) => {
   try {
-
     const result = await db.query(`
       SELECT
         id,
@@ -388,20 +388,19 @@ app.get("/api/today-followups", async (req, res) => {
         notes,
         followup_date
       FROM saved_leads
-      WHERE followup_date = CURRENT_DATE
+      WHERE followup_date IS NOT NULL
+        AND followup_date = CURRENT_DATE
       ORDER BY followup_date ASC
     `);
 
     res.json(result.rows);
 
   } catch (err) {
-
-    console.log(err);
+    console.error(err);
 
     res.status(500).json({
-      message: "Database Error"
+      error: err.message,
     });
-
   }
 });
 
