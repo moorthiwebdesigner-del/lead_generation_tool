@@ -1,9 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-console.log("MYSQLHOST =", process.env.MYSQLHOST);
-console.log("MYSQLUSER =", process.env.MYSQLUSER);
-console.log("MYSQLDATABASE =", process.env.MYSQLDATABASE);
-console.log("MYSQLPORT =", process.env.MYSQLPORT);
 const db = require("./db");
 const axios = require("axios");
 const bcrypt = require("bcrypt");
@@ -22,36 +18,27 @@ app.get("/", (req, res) => {
 });
 
 
-app.post("/api/login", (req, res) => {
-  console.log("===== LOGIN API =====");
-  console.log(req.body);
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-  const { email, password } = req.body;
+    const result = await db.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
 
-  const sql = "SELECT * FROM users WHERE email = ?";
-
-  db.query(sql, [email], async (err, results) => {
-
-    console.log("DB Error:", err);
-    console.log("Results:", results);
-
-    if (err) {
-      return res.status(500).json(err);
-    }
-
-    if (results.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(401).json({
         message: "Invalid Email",
       });
     }
 
-    const user = results[0];
+    const user = result.rows[0];
 
-    console.log("User:", user);
-
-    const match = await bcrypt.compare(password, user.password);
-
-    console.log("Password Match:", match);
+    const match = await bcrypt.compare(
+      password,
+      user.password
+    );
 
     if (!match) {
       return res.status(401).json({
@@ -59,9 +46,38 @@ app.post("/api/login", (req, res) => {
       });
     }
 
-    res.json({ message: "Success" });
-  });
+    const token = jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.JWT_SECRET || "lead_generation_secret",
+      {
+        expiresIn: "1d",
+      }
+    );
+
+    res.json({
+      message: "Login Success",
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      message: "Database Error",
+    });
+  }
 });
+
+
 /*
 GET /api/search?query=Restaurant&city=Chennai
 */
@@ -105,137 +121,112 @@ app.get("/api/search", async (req, res) => {
 });
 
 
-app.post("/api/save-lead", (req, res) => {
+app.post("/api/save-lead", async (req, res) => {
+  try {
+    const {
+      business_name,
+      phone,
+      website,
+      rating,
+      address,
+    } = req.body;
 
-  const {
-    business_name,
-    phone,
-    website,
-    rating,
-    address,
-  } = req.body;
+    const check = await db.query(
+      `SELECT id
+       FROM saved_leads
+       WHERE business_name = $1
+       AND phone = $2`,
+      [business_name, phone]
+    );
 
-
-  // Duplicate check
- const checkSql = `
-  SELECT id 
-  FROM saved_leads
-  WHERE 
-    business_name = ?
-    AND phone = ?
-`;
-
-
-  db.query(
-    checkSql,
-    [business_name, phone, website],
-    (err, result) => {
-
-      if (err) {
-        return res.status(500).json({
-          message: "Database Error",
-        });
-      }
-
-
-      if (result.length > 0) {
-
-        return res.status(400).json({
-          message: "Lead already saved",
-        });
-
-      }
-
-
-      // Insert new lead
-      const sql = `
-        INSERT INTO saved_leads
-        (business_name, phone, website, rating, address, status)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `;
-
-
-      db.query(
-        sql,
-        [
-          business_name,
-          phone,
-          website,
-          rating,
-          address,
-          "New"
-        ],
-        (err) => {
-
-          if (err) {
-            return res.status(500).json({
-              message:"Database Error"
-            });
-          }
-
-
-          res.json({
-            message:"Lead Saved Successfully ✅"
-          });
-
-        }
-      );
-
-
-    }
-  );
-
-});
-
-app.get("/api/saved-leads", (req, res) => {
-  const sql = `
-    SELECT *
-    FROM saved_leads
-    ORDER BY created_at DESC
-  `;
-
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.log(err);
-      return res.status(500).json({
-        message: "Database Error",
+    if (check.rows.length > 0) {
+      return res.status(400).json({
+        message: "Lead already saved",
       });
     }
 
-    res.json(results);
-  });
+    await db.query(
+      `INSERT INTO saved_leads
+      (business_name, phone, website, rating, address, status)
+      VALUES ($1,$2,$3,$4,$5,$6)`,
+      [
+        business_name,
+        phone,
+        website,
+        rating,
+        address,
+        "New",
+      ]
+    );
+
+    res.json({
+      message: "Lead Saved Successfully ✅",
+    });
+
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      message: "Database Error",
+    });
+  }
 });
 
-app.delete("/api/saved-leads/:id", (req, res) => {
-  const { id } = req.params;
+app.get("/api/saved-leads", async (req, res) => {
+  try {
 
-  const sql = "DELETE FROM saved_leads WHERE id = ?";
+    const result = await db.query(`
+      SELECT *
+      FROM saved_leads
+      ORDER BY created_at DESC
+    `);
 
-  db.query(sql, [id], (err) => {
-    if (err) {
-      console.log(err);
-      return res.status(500).json({
-        message: "Delete Failed",
-      });
-    }
+    res.json(result.rows);
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      message: "Database Error",
+    });
+
+  }
+});
+
+app.delete("/api/saved-leads/:id", async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    await db.query(
+      "DELETE FROM saved_leads WHERE id = $1",
+      [id]
+    );
 
     res.json({
       message: "Lead Deleted Successfully",
     });
-  });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      message: "Delete Failed",
+    });
+
+  }
 });
 
 const { Parser } = require("json2csv");
 
-app.get("/api/export-csv", (req, res) => {
-  const sql = "SELECT * FROM saved_leads";
+app.get("/api/export-csv", async (req, res) => {
+  try {
 
-  db.query(sql, (err, results) => {
-    if (err) {
-      return res.status(500).json({
-        message: "Database Error",
-      });
-    }
+    const result = await db.query(
+      "SELECT * FROM saved_leads"
+    );
 
     const fields = [
       "business_name",
@@ -247,197 +238,194 @@ app.get("/api/export-csv", (req, res) => {
 
     const parser = new Parser({ fields });
 
-    const csv = parser.parse(results);
+    const csv = parser.parse(result.rows);
 
     res.header("Content-Type", "text/csv");
     res.attachment("saved_leads.csv");
 
-    return res.send(csv);
-  });
-});
+    res.send(csv);
 
-app.get("/api/dashboard-stats", (req, res) => {
+  } catch (err) {
 
-  const sql = `
-    SELECT
-      COUNT(*) AS totalLeads,
+    console.log(err);
 
-      SUM(DATE(created_at)=CURDATE()) AS todayLeads,
-
-      AVG(rating) AS avgRating,
-
-      SUM(status='New') AS newLeads,
-
-      SUM(status='Contacted') AS contactedLeads,
-
-      SUM(status='Qualified') AS qualifiedLeads,
-
-      SUM(status='Proposal') AS proposalLeads,
-
-      SUM(status='Won') AS wonLeads,
-
-      SUM(status='Lost') AS lostLeads
-
-    FROM saved_leads
-  `;
-
-
-  db.query(sql, (err, result)=>{
-
-    if(err){
-      return res.status(500).json(err);
-    }
-
-
-    const data = result[0];
-
-
-    res.json({
-
-      totalLeads: data.totalLeads || 0,
-
-      todayLeads: data.todayLeads || 0,
-
-      avgRating:
-        Number(data.avgRating || 0).toFixed(1),
-
-
-      newLeads: data.newLeads || 0,
-
-      contactedLeads: data.contactedLeads || 0,
-
-      qualifiedLeads: data.qualifiedLeads || 0,
-
-      proposalLeads: data.proposalLeads || 0,
-
-      wonLeads: data.wonLeads || 0,
-
-      lostLeads: data.lostLeads || 0,
-
+    res.status(500).json({
+      message: "Database Error",
     });
 
-  });
-
+  }
 });
 
-app.get("/api/search-saved", (req, res) => {
-  const { keyword } = req.query;
+app.get("/api/dashboard-stats", async (req, res) => {
+  try {
 
-  const sql = `
-    SELECT *
-    FROM saved_leads
-    WHERE business_name LIKE ?
-       OR phone LIKE ?
-       OR address LIKE ?
-    ORDER BY created_at DESC
-  `;
+    const result = await db.query(`
+      SELECT
+        COUNT(*)::int AS "totalLeads",
 
-  const search = `%${keyword}%`;
+        COUNT(*) FILTER (
+          WHERE DATE(created_at) = CURRENT_DATE
+        )::int AS "todayLeads",
 
-  db.query(sql, [search, search, search], (err, results) => {
-    if (err) {
-      return res.status(500).json({
-        message: "Database Error",
-      });
-    }
+        COALESCE(AVG(rating),0) AS "avgRating",
 
-    res.json(results);
-  });
+        COUNT(*) FILTER (WHERE status='New')::int AS "newLeads",
+
+        COUNT(*) FILTER (WHERE status='Contacted')::int AS "contactedLeads",
+
+        COUNT(*) FILTER (WHERE status='Qualified')::int AS "qualifiedLeads",
+
+        COUNT(*) FILTER (WHERE status='Proposal')::int AS "proposalLeads",
+
+        COUNT(*) FILTER (WHERE status='Won')::int AS "wonLeads",
+
+        COUNT(*) FILTER (WHERE status='Lost')::int AS "lostLeads"
+
+      FROM saved_leads
+    `);
+
+    const data = result.rows[0];
+
+    res.json({
+      totalLeads: data.totalLeads,
+      todayLeads: data.todayLeads,
+      avgRating: Number(data.avgRating).toFixed(1),
+
+      newLeads: data.newLeads,
+      contactedLeads: data.contactedLeads,
+      qualifiedLeads: data.qualifiedLeads,
+      proposalLeads: data.proposalLeads,
+      wonLeads: data.wonLeads,
+      lostLeads: data.lostLeads,
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      message: "Database Error",
+    });
+
+  }
 });
 
-app.put("/api/update-lead/:id", (req, res) => {
-  const { id } = req.params;
+app.get("/api/search-saved", async (req, res) => {
+  try {
 
-  const {
-    status,
-    notes,
-    followup_date,
-  } = req.body;
+    const { keyword } = req.query;
 
-  const sql = `
-    UPDATE saved_leads
-    SET
-      status = ?,
-      notes = ?,
-      followup_date = ?
-    WHERE id = ?
-  `;
+    const search = `%${keyword}%`;
 
-  db.query(
-    sql,
-    [status, notes, followup_date, id],
-    (err) => {
-      if (err) {
-        console.log(err);
+    const result = await db.query(
+      `SELECT *
+       FROM saved_leads
+       WHERE business_name ILIKE $1
+          OR phone ILIKE $2
+          OR address ILIKE $3
+       ORDER BY created_at DESC`,
+      [search, search, search]
+    );
 
-        return res.status(500).json({
-          message: "Update Failed",
-        });
-      }
+    res.json(result.rows);
 
-      res.json({
-        message: "Lead Updated Successfully"
-      });
-    }
-  );
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      message: "Database Error",
+    });
+
+  }
 });
 
-app.get("/api/today-followups", (req, res) => {
+app.put("/api/update-lead/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
 
-  const sql = `
-    SELECT
-      id,
-      business_name,
-      phone,
+    const {
       status,
       notes,
-      followup_date
-    FROM saved_leads
-    WHERE followup_date = CURDATE()
-    ORDER BY followup_date ASC
-  `;
+      followup_date,
+    } = req.body;
 
-  db.query(sql, (err, results) => {
+    await db.query(
+      `UPDATE saved_leads
+       SET status=$1,
+           notes=$2,
+           followup_date=$3
+       WHERE id=$4`,
+      [status, notes, followup_date, id]
+    );
 
-    if (err) {
-      return res.status(500).json({
-        message: "Database Error"
-      });
-    }
+    res.json({
+      message: "Lead Updated Successfully",
+    });
 
-    res.json(results);
+  } catch (err) {
 
-  });
+    console.log(err);
 
+    res.status(500).json({
+      message: "Update Failed",
+    });
+
+  }
 });
 
-app.get("/api/analytics", (req,res)=>{
+app.get("/api/today-followups", async (req, res) => {
+  try {
 
-const sql = `
+    const result = await db.query(`
+      SELECT
+        id,
+        business_name,
+        phone,
+        status,
+        notes,
+        followup_date
+      FROM saved_leads
+      WHERE followup_date = CURRENT_DATE
+      ORDER BY followup_date ASC
+    `);
 
-SELECT 
-status,
-COUNT(*) as total
+    res.json(result.rows);
 
-FROM saved_leads
+  } catch (err) {
 
-GROUP BY status
+    console.log(err);
 
-`;
+    res.status(500).json({
+      message: "Database Error"
+    });
 
-db.query(sql,(err,result)=>{
-
-if(err){
- return res.status(500).json(err);
-}
-
-
-res.json(result);
-
-
+  }
 });
 
+app.get("/api/analytics", async (req, res) => {
+  try {
 
+    const result = await db.query(`
+      SELECT
+        status,
+        COUNT(*)::int AS total
+      FROM saved_leads
+      GROUP BY status
+      ORDER BY status
+    `);
+
+    res.json(result.rows);
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      message: "Database Error",
+    });
+
+  }
 });
 
 const PORT = process.env.PORT || 5000;
