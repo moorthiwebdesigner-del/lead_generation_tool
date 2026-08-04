@@ -19,15 +19,20 @@ app.get("/", (req, res) => {
 
 
 app.post("/api/login", (req, res) => {
+  console.log("===== LOGIN API =====");
+  console.log(req.body);
+
   const { email, password } = req.body;
 
   const sql = "SELECT * FROM users WHERE email = ?";
 
   db.query(sql, [email], async (err, results) => {
+
+    console.log("DB Error:", err);
+    console.log("Results:", results);
+
     if (err) {
-      return res.status(500).json({
-        message: "Database Error",
-      });
+      return res.status(500).json(err);
     }
 
     if (results.length === 0) {
@@ -38,7 +43,11 @@ app.post("/api/login", (req, res) => {
 
     const user = results[0];
 
+    console.log("User:", user);
+
     const match = await bcrypt.compare(password, user.password);
+
+    console.log("Password Match:", match);
 
     if (!match) {
       return res.status(401).json({
@@ -46,28 +55,7 @@ app.post("/api/login", (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      "lead_generation_secret",
-      {
-        expiresIn: "1d",
-      }
-    );
-
-    res.json({
-      message: "Login Success",
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
+    res.json({ message: "Success" });
   });
 });
 /*
