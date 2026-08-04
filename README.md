@@ -57,17 +57,28 @@ Statuses:
 - Tailwind CSS
 - PrimeReact DataTable
 - React Icons
+- Axios
 
 ### Backend
 - Node.js
 - Express.js
-- MySQL
+- PostgreSQL (Supabase)
 - JWT
-- Axios
+- bcrypt
+
+## Database
+-  PostgreSQL (Supabase)
 
 ### APIs
 - Google Places API
 
+## Deployment
+- Render
+- Vercel
+
+## Version Control
+- Git
+- GitHub
 ---
 
 ## 📂 Project Structure
