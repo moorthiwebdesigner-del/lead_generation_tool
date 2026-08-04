@@ -148,24 +148,6 @@ function Sidebar({
       >
 
 
-        <img
-
-          src={logo}
-
-          alt="LeadGen CRM"
-
-          className="
-            w-48
-            h-auto
-            object-contain
-            cursor-pointer
-            drop-shadow-[0_0_18px_rgba(37,99,235,0.5)]
-            hover:scale-105
-            transition
-            duration-300
-          "
-
-        />
 
 
 

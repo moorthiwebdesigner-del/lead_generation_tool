@@ -1,10 +1,12 @@
+require("dotenv").config();
+
+console.log("DATABASE_URL =", process.env.DATABASE_URL);
 const express = require("express");
 const cors = require("cors");
 const db = require("./db");
 const axios = require("axios");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 
 const app = express();
 

@@ -219,7 +219,6 @@ Moorthi
 +91 9629301506`;
 
 
-
 const url=
 
 `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
