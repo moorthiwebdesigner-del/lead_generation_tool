@@ -9,6 +9,8 @@ import {
   FaTimes,
 } from "react-icons/fa";
 
+import logo from "../assets/logo.png";
+
 
 function Sidebar({
   sidebarOpen,
@@ -49,52 +51,76 @@ function Sidebar({
   return (
 
     <aside
+
       className={`
-fixed
-md:static
-top-0
-left-0
-z-[60]
-w-64
-h-screen
-bg-slate-900
-text-white
-flex
-flex-col
-transform
-transition-transform
-duration-300
+        fixed
+        md:static
+        top-0
+        left-0
+        z-[60]
 
-${
-sidebarOpen
-? "translate-x-0"
-: "-translate-x-full md:translate-x-0"
-}
+        w-64
+        h-screen
 
-`}
+        bg-gradient-to-b
+        from-[#020617]
+        via-[#0f172a]
+        to-[#172554]
+
+        text-white
+
+        flex
+        flex-col
+
+        transform
+        transition-transform
+        duration-300
+
+
+        ${
+          sidebarOpen
+          ?
+          "translate-x-0"
+          :
+          "-translate-x-full md:translate-x-0"
+        }
+
+      `}
+
     >
+
+
+
 
 
       {/* Mobile Close Button */}
 
       <div
         className="
-        flex
-        justify-end
-        p-4
-        md:hidden
+          flex
+          justify-end
+          p-4
+          md:hidden
         "
       >
 
         <button
+
           onClick={() => setSidebarOpen(false)}
+
           className="
-          text-xl
-          text-white
+            text-xl
+            hover:text-blue-400
+            cursor-pointer
+            transition
           "
+
         >
+
           <FaTimes />
+
         </button>
+
 
       </div>
 
@@ -102,39 +128,86 @@ sidebarOpen
 
 
 
-      {/* Logo */}
+
+
+      {/* Logo Section */}
+
 
       <div
+
         className="
-        p-6
-        border-b
-        border-slate-700
+          p-5
+          border-b
+          border-slate-700
+          flex
+          flex-col
+          items-center
+          bg-[#020617]
         "
+
       >
 
-        <h2
+
+        <img
+
+          src={logo}
+
+          alt="LeadGen CRM"
+
           className="
-          text-2xl
-          font-bold
-          text-blue-400
+            w-48
+            h-auto
+            object-contain
+            cursor-pointer
+            drop-shadow-[0_0_18px_rgba(37,99,235,0.5)]
+            hover:scale-105
+            transition
+            duration-300
           "
+
+        />
+
+
+
+        <h3
+
+          className="
+            text-white
+            font-semibold
+            text-lg
+            mt-3
+          "
+
         >
-          LeadGen
-        </h2>
+
+          LeadGen CRM
+
+        </h3>
+
+
 
 
         <p
+
           className="
-          text-sm
-          text-slate-400
-          mt-1
+            text-xs
+            text-blue-300
+            mt-1
+            tracking-widest
           "
+
         >
-          Business Finder
+
+          BUSINESS CRM PLATFORM
+
         </p>
 
 
+
       </div>
+
+
+
 
 
 
@@ -143,16 +216,20 @@ sidebarOpen
 
       {/* Menu */}
 
+
       <nav
+
         className="
-        flex-1
-        mt-6
+          flex-1
+          mt-6
         "
+
       >
 
 
         {
           menus.map((menu)=>(
+
 
             <NavLink
 
@@ -161,28 +238,53 @@ sidebarOpen
               to={menu.path}
 
 
-              onClick={() => setSidebarOpen(false)}
+              onClick={() =>
+                setSidebarOpen(false)
+              }
 
 
-              className={({isActive})=>
+
+              className={({isActive}) =>
 
                 `
-                w-full
+
                 flex
                 items-center
                 gap-4
+
                 px-6
                 py-4
+
                 transition
                 duration-300
 
+                group
+
+
                 ${
                   isActive
+
                   ?
-                  "bg-blue-600 text-white"
+
+                  `
+                  bg-gradient-to-r
+                  from-blue-600
+                  to-blue-500
+
+                  shadow-lg
+                  shadow-blue-900/50
+
+                  border-r-4
+                  border-white
+                  `
+
                   :
-                  "hover:bg-blue-600 hover:text-white"
+
+                  `
+                  hover:bg-blue-600/30
+                  `
                 }
+
 
                 `
               }
@@ -190,28 +292,45 @@ sidebarOpen
             >
 
 
+
               <span
+
                 className="
-                text-xl
+                  text-xl
+                  group-hover:scale-110
+                  transition
                 "
+
               >
+
                 {menu.icon}
+
               </span>
+
+
+
 
 
               <span
+
                 className="
-                font-medium
+                  font-medium
                 "
+
               >
+
                 {menu.title}
+
               </span>
+
 
 
             </NavLink>
 
+
           ))
         }
+
 
 
       </nav>
@@ -221,43 +340,67 @@ sidebarOpen
 
 
 
+
+
+
       {/* Footer */}
 
+
       <div
+
         className="
-        p-6
-        border-t
-        border-slate-700
+          p-5
+          border-t
+          border-slate-700
         "
+
       >
 
+
         <p
+
           className="
-          text-sm
-          text-slate-400
+            text-sm
+            text-slate-400
           "
+
         >
+
           Version 1.0
+
         </p>
+
+
 
 
         <p
+
           className="
-          text-xs
-          text-slate-500
-          mt-2
+            text-xs
+            text-slate-500
+            mt-2
           "
+
         >
+
           © 2026 Moorthi Web Studio
+
         </p>
+
 
 
       </div>
 
 
+
+
+
+
+
     </aside>
 
   );
+
 }
 
 
