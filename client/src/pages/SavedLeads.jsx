@@ -178,16 +178,18 @@ return;
 }
 
 
-let phone=row.phone.replace(/\D/g,"");
 
+let phone = row.phone.replace(/\D/g, "");
 
+if (phone.startsWith("91") && phone.length === 12) {
+  // Already correct
+} else {
+  phone = phone.replace(/^0+/, "");
 
-if(phone.length===10){
-
-phone="91"+phone;
-
+  if (phone.length === 10) {
+    phone = "91" + phone;
+  }
 }
-
 
 
 const message=
