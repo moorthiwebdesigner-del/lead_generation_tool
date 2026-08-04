@@ -1,5 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+console.log("MYSQLHOST =", process.env.MYSQLHOST);
+console.log("MYSQLUSER =", process.env.MYSQLUSER);
+console.log("MYSQLDATABASE =", process.env.MYSQLDATABASE);
+console.log("MYSQLPORT =", process.env.MYSQLPORT);
 const db = require("./db");
 const axios = require("axios");
 const bcrypt = require("bcrypt");
