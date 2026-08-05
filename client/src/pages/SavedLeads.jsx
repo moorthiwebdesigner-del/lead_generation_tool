@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import api from "../api/api";
 
+import SavedLeadCard from "../components/SavedLeadCard";
+
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { InputText } from "primereact/inputtext";
@@ -42,7 +44,7 @@ const [followup,setFollowup]=useState(null);
 const dt=useRef(null);
 
 
-
+const [isMobile, setIsMobile] = useState(false);
 
 
 
@@ -100,14 +102,40 @@ const statusOptions = [
 
 
 
-
-
 useEffect(()=>{
 
-fetchLeads();
+  fetchLeads();
+
+
+  const checkMobile = () => {
+
+    setIsMobile(
+      window.innerWidth < 768
+    );
+
+  };
+
+
+  checkMobile();
+
+
+  window.addEventListener(
+    "resize",
+    checkMobile
+  );
+
+
+  return () => {
+
+    window.removeEventListener(
+      "resize",
+      checkMobile
+    );
+
+  };
+
 
 },[]);
-
 
 
 
@@ -710,7 +738,8 @@ setStatusFilter(e.value)
 
 placeholder="Filter Status"
 
-className="w-44"
+className="w-full
+md:w-44"
 
 />
 
@@ -726,6 +755,11 @@ onChange={(e)=>
 setGlobalFilter(e.target.value)
 }
 
+className="
+w-full
+md:w-64
+"
+
 />
 
 
@@ -738,6 +772,10 @@ icon="pi pi-download"
 
 onClick={exportCSV}
 
+className="
+w-full
+md:w-auto
+"
 />
 
 
@@ -753,6 +791,27 @@ onClick={exportCSV}
 
 
 
+
+{
+isMobile ? (
+
+  <SavedLeadCard
+
+    leads={filteredLeads}
+
+    editLead={editLead}
+
+    deleteLead={deleteLead}
+
+    openWhatsApp={openWhatsApp}
+
+  />
+
+)
+
+:
+
+(
 
 <DataTable
 
@@ -781,7 +840,6 @@ emptyMessage="No Saved Leads"
 >
 
 
-
 <Column
 
 field="business_name"
@@ -793,7 +851,6 @@ sortable
 />
 
 
-
 <Column
 
 field="phone"
@@ -803,7 +860,6 @@ header="Phone"
 />
 
 
-
 <Column
 
 header="Website"
@@ -811,7 +867,6 @@ header="Website"
 body={websiteBody}
 
 />
-
 
 
 <Column
@@ -825,7 +880,6 @@ body={ratingBody}
 />
 
 
-
 <Column
 
 field="address"
@@ -833,7 +887,6 @@ field="address"
 header="Address"
 
 />
-
 
 
 <Column
@@ -845,7 +898,6 @@ body={statusBody}
 />
 
 
-
 <Column
 
 header="Followup"
@@ -853,7 +905,6 @@ header="Followup"
 body={followupBody}
 
 />
-
 
 
 <Column
@@ -865,7 +916,6 @@ header="Notes"
 />
 
 
-
 <Column
 
 header="Action"
@@ -875,12 +925,11 @@ body={actionBody}
 />
 
 
-
 </DataTable>
 
+)
 
-
-
+}
 
 
 

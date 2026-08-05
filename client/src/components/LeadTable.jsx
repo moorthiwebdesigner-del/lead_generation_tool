@@ -1,39 +1,120 @@
+import { useState, useEffect } from "react";
+
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import api from "../api/api";
+import MobileLeadCard from "./MobileLeadCard";
 
-function LeadTable({ leads, savedLeads, refreshSaved }) {
+function LeadTable({
+  leads,
+  savedLeads,
+  refreshSaved
+}) {
+
 
   const saveLead = async (lead) => {
+
     try {
+
       await api.post("/api/save-lead", {
-        business_name: lead.displayName?.text,
-        phone: lead.nationalPhoneNumber || "",
-        website: lead.websiteUri || "",
-        rating: lead.rating || 0,
-        address: lead.formattedAddress || "",
+
+        business_name:
+          lead.displayName?.text,
+
+        phone:
+          lead.nationalPhoneNumber || "",
+
+        website:
+          lead.websiteUri || "",
+
+        rating:
+          lead.rating || 0,
+
+        address:
+          lead.formattedAddress || "",
+
       });
 
+
       alert("✅ Lead Saved Successfully");
-      refreshSaved();
+
+
+      await refreshSaved();
+
+
     } catch (err) {
+
+
       console.error(err);
-      alert(err.response?.data?.message || "Failed to Save Lead");
+
+
+      alert(
+        err.response?.data?.message ||
+        "Failed to Save Lead"
+      );
+
+
     }
+
   };
 
+
+
+  // Check Already Saved
+
+  const isSaved = (row) => {
+
+    return savedLeads?.some((item) => {
+
+
+      const nameMatch =
+        item.business_name
+          ?.trim()
+          .toLowerCase() ===
+        row.displayName?.text
+          ?.trim()
+          .toLowerCase();
+
+
+      const phoneMatch =
+        (item.phone || "") ===
+        (row.nationalPhoneNumber || "");
+
+
+      return nameMatch && phoneMatch;
+
+
+    });
+
+
+  };
+
+
+
   const businessBody = (row) => (
+
     <span className="font-semibold">
       {row.displayName?.text}
     </span>
+
   );
+
+
 
   const phoneBody = (row) => (
-    row.nationalPhoneNumber || "-"
+
+    <span>
+      {row.nationalPhoneNumber || "-"}
+    </span>
+
   );
 
-  const websiteBody = (row) =>
-    row.websiteUri ? (
+
+
+  const websiteBody = (row) => (
+
+    row.websiteUri ?
+
       <a
         href={row.websiteUri}
         target="_blank"
@@ -42,95 +123,197 @@ function LeadTable({ leads, savedLeads, refreshSaved }) {
       >
         Visit
       </a>
-    ) : (
+
+      :
+
       "-"
-    );
+
+  );
 
   const ratingBody = (row) => (
+
     <span className="font-semibold text-yellow-500">
+
       ⭐ {row.rating || "-"}
+
     </span>
+
   );
+
+
 
   const addressBody = (row) => (
-    <span>{row.formattedAddress}</span>
+
+    <span className="text-sm">
+
+      {row.formattedAddress || "-"}
+
+    </span>
+
   );
 
- const actionBody = (row) => {
 
-  const saved = savedLeads?.some(
-    (item) =>
-      item.phone === row.nationalPhoneNumber
+
+  // Save Button
+
+  const actionBody = (row) => {
+
+    const saved = isSaved(row);
+
+
+    return (
+
+      <button
+
+        disabled={saved}
+
+        onClick={() => saveLead(row)}
+
+        className={
+
+          saved
+
+          ?
+
+          "bg-green-600 text-white px-4 py-2 rounded-lg cursor-not-allowed"
+
+          :
+
+          "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+
+        }
+
+      >
+
+        {saved ? "✅ Saved" : "💾 Save"}
+
+      </button>
+
+    );
+
+  };
+
+
+  const [isMobile, setIsMobile] = useState(false);
+
+
+useEffect(() => {
+
+  const checkScreen = () => {
+
+    setIsMobile(window.innerWidth < 768);
+
+  };
+
+
+  checkScreen();
+
+  window.addEventListener(
+    "resize",
+    checkScreen
   );
 
 
-  return (
-    <button
-      disabled={saved}
-      onClick={() => saveLead(row)}
-      className={
-        saved
-          ? "bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed"
-          : "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
-      }
-    >
-      {saved ? "✅ Saved" : "💾 Save"}
-    </button>
-  );
-};
+  return () => {
 
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-4">
+    window.removeEventListener(
+      "resize",
+      checkScreen
+    );
+
+  };
+
+
+}, []);
+
+
+
+return (
+
+  <div className="bg-white rounded-2xl shadow-lg p-4">
+
+
+    {isMobile ? (
+
+      <MobileLeadCard
+
+        leads={leads}
+
+        savedLeads={savedLeads}
+
+        refreshSaved={refreshSaved}
+
+      />
+
+
+    ) : (
+
 
       <DataTable
+
         value={leads}
+
         paginator
+
         rows={10}
-        rowsPerPageOptions={[10, 20, 50]}
+
+        rowsPerPageOptions={[10,20,50]}
+
         stripedRows
+
         responsiveLayout="scroll"
-        sortMode="multiple"
+
         emptyMessage="No businesses found."
+
       >
 
         <Column
-          field="displayName.text"
           header="Business"
-          sortable
           body={businessBody}
         />
+
 
         <Column
           header="Phone"
           body={phoneBody}
         />
 
+
         <Column
           header="Website"
           body={websiteBody}
         />
 
+
         <Column
-          field="rating"
           header="Rating"
-          sortable
           body={ratingBody}
         />
+
 
         <Column
           header="Address"
           body={addressBody}
         />
 
+
         <Column
           header="Action"
           body={actionBody}
         />
 
+
       </DataTable>
 
-    </div>
-  );
+
+    )}
+
+
+  </div>
+
+);
+
 }
+
 
 export default LeadTable;

@@ -33,10 +33,10 @@ function Dashboard() {
     }
   };
 
-  const followupBody = (row) => {
+const followupBody = (row) => {
   if (!row.followup_date) return "-";
 
-  const date = new Date(row.followup_date);
+  const date = new Date(row.followup_date + "T00:00:00");
 
   return date.toLocaleDateString("en-IN", {
     day: "2-digit",
