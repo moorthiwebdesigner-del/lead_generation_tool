@@ -15,23 +15,47 @@ function Dashboard() {
     loadFollowups();
   }, []);
 
-  const loadDashboard = async () => {
-    try {
-      const res = await api.get("/api/dashboard-stats");
-      setStats(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  
 
-  const loadFollowups = async () => {
-    try {
-      const res = await api.get("/api/today-followups");
-      setFollowups(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+const loadDashboard = async () => {
+  try {
+
+    const res = await api.get("/api/dashboard-stats");
+
+    console.log("Dashboard API:", res.data);
+
+    setStats(res.data || {});
+
+  } catch (err) {
+
+    console.log(err);
+    setStats({});
+
+  }
+};
+
+
+const loadFollowups = async () => {
+  try {
+
+    const res = await api.get("/api/today-followups");
+
+    console.log("Followups API:", res.data);
+
+    setFollowups(
+      Array.isArray(res.data)
+        ? res.data
+        : []
+    );
+
+  } catch (err) {
+
+    console.log(err);
+    setFollowups([]);
+
+  }
+};
+
 
 const followupBody = (row) => {
   if (!row.followup_date) return "-";
