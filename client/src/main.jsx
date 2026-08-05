@@ -6,7 +6,14 @@ import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import { AuthProvider } from "./context/AuthContext";
+import { registerSW } from "virtual:pwa-register";
 
+
+registerSW({
+  onOfflineReady() {
+    console.log("Lead CRM Ready");
+  }
+});
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
