@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import logo from "../assets/logo.png";
+import logo from "/favicon.png";
 
 
 function InstallPopup() {
