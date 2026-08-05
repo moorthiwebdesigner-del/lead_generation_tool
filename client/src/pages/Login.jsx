@@ -23,53 +23,53 @@ function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  const [error, setError] = useState("");
 
 
-  const login = async (e) => {
+const login = async (e) => {
 
-    e.preventDefault();
+  e.preventDefault();
 
+  setError("");
 
-    try {
+  try {
 
+    const res = await api.post("/api/login", {
 
-      const res = await api.post("/api/login", {
+      email,
 
-        email,
+      password,
 
-        password,
-
-      });
-
-
-
-      authLogin(
-
-        res.data.token,
-
-        res.data.user
-
-      );
+    });
 
 
+    authLogin(
 
-      navigate("/");
+      res.data.token,
 
+      res.data.user
 
-
-    } catch (err) {
-
-
-      console.error(err);
-
-      alert("Invalid Email or Password");
+    );
 
 
-    }
-
-  };
+    navigate("/");
 
 
+  } catch (err) {
+
+
+    console.error(err);
+
+
+    setError(
+      err.response?.data?.message ||
+      "Invalid email or password"
+    );
+
+
+  }
+
+};
 
 
 
@@ -329,7 +329,6 @@ function Login() {
 
 
 
-
         {/* Login Button */}
 
 
@@ -369,6 +368,11 @@ function Login() {
 
 
 
+{error && (
+  <div className="bg-red-100 text-red-700 p-3 mt-5 rounded-lg">
+    {error}
+  </div>
+)}
 
 
 

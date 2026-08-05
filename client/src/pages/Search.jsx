@@ -24,7 +24,8 @@ function Search() {
 
       const res = await api.get("/api/saved-leads");
 
-      setSavedLeads(res.data);
+      setSavedLeads([...res.data]);
+
 
     } catch (err) {
 

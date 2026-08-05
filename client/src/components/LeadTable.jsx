@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import api from "../api/api";
 import MobileLeadCard from "./MobileLeadCard";
+import { Toast } from "primereact/toast";
+
 
 function LeadTable({
   leads,
@@ -11,6 +13,9 @@ function LeadTable({
   refreshSaved
 }) {
 
+const [savedStatus, setSavedStatus] = useState([]);
+
+const toast = useRef(null);
 
   const saveLead = async (lead) => {
 
@@ -36,11 +41,23 @@ function LeadTable({
       });
 
 
-      alert("✅ Lead Saved Successfully");
+      toast.current.show({
+    severity:"success",
+    summary:"Lead Saved",
+    detail:"Business lead saved successfully",
+    life:3000
+});
 
 
+setSavedStatus(prev => [
+  ...prev,
+  lead.displayName?.text
+]);
+
+  
       await refreshSaved();
 
+       
 
     } catch (err) {
 
@@ -48,10 +65,14 @@ function LeadTable({
       console.error(err);
 
 
-      alert(
-        err.response?.data?.message ||
-        "Failed to Save Lead"
-      );
+     toast.current.show({
+  severity:"error",
+  summary:"Save Failed",
+  detail:
+    err.response?.data?.message ||
+    "Failed to save lead",
+  life:3000
+});
 
 
     }
@@ -61,34 +82,35 @@ function LeadTable({
 
 
   // Check Already Saved
-
-  const isSaved = (row) => {
-
-    return savedLeads?.some((item) => {
+const isSaved = (row) => {
 
 
-      const nameMatch =
-        item.business_name
-          ?.trim()
-          .toLowerCase() ===
-        row.displayName?.text
-          ?.trim()
-          .toLowerCase();
+
+  const localSaved = savedStatus.some(
+    name =>
+      name?.trim().toLowerCase() ===
+      row.displayName?.text?.trim().toLowerCase()
+  );
+
+  if(localSaved)
+    return true;
 
 
-      const phoneMatch =
-        (item.phone || "") ===
-        (row.nationalPhoneNumber || "");
+  return savedLeads?.some((item)=>{
 
+    return (
+      item.business_name
+      ?.trim()
+      .toLowerCase()
+      ===
+      row.displayName?.text
+      ?.trim()
+      .toLowerCase()
+    );
 
-      return nameMatch && phoneMatch;
+  });
 
-
-    });
-
-
-  };
-
+};
 
 
   const businessBody = (row) => (
@@ -227,8 +249,9 @@ useEffect(() => {
 }, []);
 
 
-
 return (
+<>
+<Toast ref={toast} />
 
   <div className="bg-white rounded-2xl shadow-lg p-4">
 
@@ -243,6 +266,10 @@ return (
 
         refreshSaved={refreshSaved}
 
+        savedStatus={savedStatus}
+        
+  setSavedStatus={setSavedStatus}
+
       />
 
 
@@ -250,6 +277,8 @@ return (
 
 
       <DataTable
+
+      key={savedStatus.length}
 
         value={leads}
 
@@ -310,6 +339,7 @@ return (
 
 
   </div>
+</>
 
 );
 

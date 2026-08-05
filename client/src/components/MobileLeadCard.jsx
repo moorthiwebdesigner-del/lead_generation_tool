@@ -4,7 +4,9 @@ import api from "../api/api";
 function MobileLeadCard({
   leads,
   savedLeads,
-  refreshSaved
+  refreshSaved,
+   savedStatus,
+  setSavedStatus
 }) {
 
 
@@ -32,7 +34,10 @@ function MobileLeadCard({
       });
 
 
-      alert("✅ Lead Saved Successfully");
+     setSavedStatus(prev => [
+  ...prev,
+  lead.displayName?.text
+]);
 
       await refreshSaved();
 
@@ -50,22 +55,24 @@ function MobileLeadCard({
 
   };
 
+const isSaved = (lead) => {
+
+  const localSaved = savedStatus?.some(
+    name =>
+      name?.trim().toLowerCase() ===
+      lead.displayName?.text?.trim().toLowerCase()
+  );
+
+  if(localSaved)
+    return true;
 
 
-  const isSaved = (lead) => {
+  return savedLeads?.some(item =>
+    item.business_name?.trim().toLowerCase() ===
+    lead.displayName?.text?.trim().toLowerCase()
+  );
 
-    return savedLeads?.some(
-      (item)=>
-
-        item.business_name ===
-        lead.displayName?.text &&
-
-        item.phone ===
-        (lead.nationalPhoneNumber || "")
-
-    );
-
-  };
+};
     return (
 
     <div className="space-y-4">
@@ -109,7 +116,7 @@ function MobileLeadCard({
 
             {/* Details */}
 
-            <div className="mt-4 space-y-3 text-sm">
+            <div className="mt-4 mb-3 space-y-3 text-sm">
 
 
               <p>
@@ -182,31 +189,23 @@ function MobileLeadCard({
 
             {/* Button */}
 
-            <button
-
-              disabled={saved}
-
-              onClick={() => saveLead(lead)}
-
-              className={`w-full mt-5 py-3 rounded-xl font-semibold text-white ${
-                
-                saved
-
-                ?
-
-                "bg-green-600 cursor-not-allowed"
-
-                :
-
-                "bg-blue-600 hover:bg-blue-700"
-
-              }`}
-
-            >
-
-              {saved ? "✅ Lead Saved" : "💾 Save Lead"}
-
-            </button>
+           <button
+ disabled={isSaved(lead)}
+ onClick={() => saveLead(lead)}
+ className={
+   isSaved(lead)
+   ?
+   "bg-green-600 text-white px-4 py-2 rounded-lg"
+   :
+   "bg-blue-600 text-white px-4 py-2 rounded-lg"
+ }
+>
+{
+ isSaved(lead)
+ ? "✅ Saved"
+ : "💾 Save"
+}
+</button>
 
 
           </div>
