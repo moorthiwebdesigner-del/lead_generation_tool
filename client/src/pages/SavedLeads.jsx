@@ -149,6 +149,9 @@ try{
 
 const res=await api.get("/api/saved-leads");
 
+console.log(res.data);
+
+
 setLeads(res.data);
 
 
