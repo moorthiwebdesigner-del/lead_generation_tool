@@ -43,7 +43,11 @@ function SearchPanel({ setLeads }) {
 
         <Dropdown
     value={query}
-    options={businessCategories}
+    options={
+ Array.isArray(businessCategories)
+ ? businessCategories
+ : []
+}
     optionLabel="label"
     optionValue="value"
     filter

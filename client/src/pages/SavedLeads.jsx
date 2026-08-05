@@ -149,10 +149,13 @@ try{
 
 const res=await api.get("/api/saved-leads");
 
-console.log(res.data);
 
 
-setLeads(res.data);
+setLeads(
+  Array.isArray(res.data)
+    ? res.data
+    : res.data.leads || []
+);
 
 
 }
