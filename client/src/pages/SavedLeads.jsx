@@ -4,13 +4,11 @@ import {
   useRef 
 } from "react";
 
-
 import api from "../api/api";
 
 import SavedLeadCard from "../components/SavedLeadCard";
 
-
-import { DataTable } from "primereact/dataTable";
+import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 
 import { InputText } from "primereact/inputtext";
@@ -23,16 +21,12 @@ import { InputTextarea } from "primereact/inputtextarea";
 
 import { Toast } from "primereact/toast";
 
-
 import {
- ConfirmDialog,
- confirmDialog
+  ConfirmDialog,
+  confirmDialog
 } from "primereact/confirmdialog";
 
-
 import { FaWhatsapp } from "react-icons/fa";
-
-
 
 
 function SavedLeads(){
